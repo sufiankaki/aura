@@ -165,16 +165,8 @@ Resources:
                 Action:
                   - dynamodb:Scan
                   - dynamodb:GetItem
-                Resource: !GetAtt AgentRegistryTable.Arn
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
                   - dynamodb:PutItem
                 Resource: !GetAtt AgentRegistryTable.Arn
-                Condition:
-                  'ForAllValues:StringLike':
-                    'dynamodb:LeadingKeys':
-                      - 'USER#${cognito-identity.amazonaws.com:sub}#*'
 
   AdminRole:
     Type: AWS::IAM::Role
@@ -502,7 +494,7 @@ Resources:
       AppId: !GetAtt AmplifyApp.AppId
       BranchName: main
       ReleaseUrl: https://github.com/sufiankaki/aura/releases/latest/download/frontend.zip
-      DeploymentVersion: "2"
+      DeploymentVersion: "3"
       ConfigJson: !Sub |
         {
           "userPoolId": "${UserPool}",
