@@ -159,6 +159,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - bedrock-agentcore:InvokeAgentRuntime
+                  - bedrock-agentcore:InvokeAgentRuntimeForUser
                 Resource: '*'
               - Effect: Allow
                 Action:
@@ -199,6 +200,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - bedrock-agentcore:InvokeAgentRuntime
+                  - bedrock-agentcore:InvokeAgentRuntimeForUser
                 Resource: '*'
               - Effect: Allow
                 Action:

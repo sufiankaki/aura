@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScanCommand, PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import {
@@ -9,20 +9,12 @@ import {
   AdminRemoveUserFromGroupCommand,
   AdminCreateUserCommand,
   ListUsersInGroupCommand,
+  ListUsersCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { useAuth } from '../auth/AuthContext';
 import { createDynamoClient } from '../aws/clients';
 import { RuntimeConfig } from '../config';
-
-interface Agent {
-  PK: string;
-  displayName: string;
-  availability: {
-    mode: 'all' | 'restricted';
-    allowedUsers?: string[];
-    allowedGroups?: string[];
-  };
-}
+import { Agent } from './Dashboard';
 
 export function Admin({ config }: { config: RuntimeConfig }) {
   const { getCredentials, logout } = useAuth();
@@ -33,21 +25,29 @@ export function Admin({ config }: { config: RuntimeConfig }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Agent form
+  // Agent form state
+  const [editingArn, setEditingArn] = useState<string | null>(null);
+  const [agentType, setAgentType] = useState<'agent' | 'harness'>('agent');
   const [agentArn, setAgentArn] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [description, setDescription] = useState('');
   const [availMode, setAvailMode] = useState<'all' | 'restricted'>('all');
   const [allowedUsers, setAllowedUsers] = useState('');
-  const [allowedGroups, setAllowedGroups] = useState('');
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
 
-  // Group form
+  // Group form state
   const [groupName, setGroupName] = useState('');
   const [groupEmail, setGroupEmail] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [groups, setGroups] = useState<string[]>([]);
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
 
-  useEffect(() => { loadAgents(); loadGroups(); }, []);
+  // User autocomplete
+  const [allUsers, setAllUsers] = useState<string[]>([]);
+  const [userSuggestions, setUserSuggestions] = useState<string[]>([]);
+  const [showNewUserWarning, setShowNewUserWarning] = useState(false);
+
+  useEffect(() => { loadAgents(); loadGroups(); loadAllUsers(); }, []);
 
   async function loadAgents() {
     setLoading(true);
@@ -68,11 +68,17 @@ export function Admin({ config }: { config: RuntimeConfig }) {
       const creds = await getCredentials();
       const cognito = new CognitoIdentityProviderClient({ region: config.region, credentials: creds });
       const result = await cognito.send(new ListGroupsCommand({ UserPoolId: config.userPoolId }));
-      const allGroups = (result.Groups ?? []).map(g => g.GroupName!).filter((g): g is string => g !== 'admin' && g !== 'user');
-      setGroups(allGroups);
-    } catch {
-      // non-critical
-    }
+      setGroups((result.Groups ?? []).map(g => g.GroupName!).filter((g): g is string => g !== 'admin' && g !== 'user'));
+    } catch { /* non-critical */ }
+  }
+
+  async function loadAllUsers() {
+    try {
+      const creds = await getCredentials();
+      const cognito = new CognitoIdentityProviderClient({ region: config.region, credentials: creds });
+      const result = await cognito.send(new ListUsersCommand({ UserPoolId: config.userPoolId, Limit: 60 }));
+      setAllUsers((result.Users ?? []).map(u => u.Attributes?.find(a => a.Name === 'email')?.Value ?? '').filter(Boolean));
+    } catch { /* non-critical */ }
   }
 
   async function loadGroupMembers(group: string) {
@@ -86,11 +92,36 @@ export function Admin({ config }: { config: RuntimeConfig }) {
     }
   }
 
-  async function handleRegisterAgent(e: React.FormEvent) {
+  // --- Agent form handlers ---
+
+  function resetAgentForm() {
+    setEditingArn(null);
+    setAgentType('agent');
+    setAgentArn('');
+    setDisplayName('');
+    setDescription('');
+    setAvailMode('all');
+    setAllowedUsers('');
+    setSelectedGroups([]);
+  }
+
+  function handleEditAgent(agent: Agent) {
+    setEditingArn(agent.PK);
+    setAgentType(agent.type || 'agent');
+    setAgentArn(agent.PK);
+    setDisplayName(agent.displayName);
+    setDescription(agent.description || '');
+    setAvailMode(agent.availability.mode);
+    setAllowedUsers((agent.availability.allowedUsers ?? []).join(', '));
+    setSelectedGroups(agent.availability.allowedGroups ?? []);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleSaveAgent(e: React.FormEvent) {
     e.preventDefault();
     setError(''); setSuccess('');
 
-    if (!agentArn.startsWith('arn:')) { setError('Agent ARN must start with arn:'); return; }
+    if (!agentArn.startsWith('arn:')) { setError('ARN must start with arn:'); return; }
     if (!displayName || displayName.length > 100) { setError('Display name must be 1-100 characters'); return; }
 
     try {
@@ -99,33 +130,39 @@ export function Admin({ config }: { config: RuntimeConfig }) {
       const item: Agent = {
         PK: agentArn,
         displayName,
+        description: description || undefined,
+        type: agentType,
         availability: availMode === 'all' ? { mode: 'all' } : {
           mode: 'restricted',
           ...(allowedUsers.trim() && { allowedUsers: allowedUsers.split(',').map(s => s.trim()).filter(Boolean) }),
-          ...(allowedGroups.trim() && { allowedGroups: allowedGroups.split(',').map(s => s.trim()).filter(Boolean) }),
+          ...(selectedGroups.length > 0 && { allowedGroups: selectedGroups }),
         },
       };
       await client.send(new PutCommand({ TableName: config.agentRegistryTable, Item: item }));
-      setSuccess('Agent registered successfully');
-      setAgentArn(''); setDisplayName(''); setAllowedUsers(''); setAllowedGroups('');
+      setSuccess(editingArn ? 'Agent updated successfully' : 'Agent registered successfully');
+      resetAgentForm();
       loadAgents();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to register agent');
+      setError(e instanceof Error ? e.message : 'Failed to save agent');
     }
   }
 
   async function handleDeleteAgent(arn: string) {
+    if (!confirm('Remove this agent?')) return;
     setError(''); setSuccess('');
     try {
       const creds = await getCredentials();
       const client = createDynamoClient(config, creds);
       await client.send(new DeleteCommand({ TableName: config.agentRegistryTable, Key: { PK: arn } }));
       setSuccess('Agent removed');
+      if (editingArn === arn) resetAgentForm();
       loadAgents();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete agent');
     }
   }
+
+  // --- Group handlers ---
 
   async function handleCreateGroup(e: React.FormEvent) {
     e.preventDefault();
@@ -143,14 +180,30 @@ export function Admin({ config }: { config: RuntimeConfig }) {
     }
   }
 
+  const handleGroupEmailChange = useCallback((value: string) => {
+    setGroupEmail(value);
+    setShowNewUserWarning(false);
+    if (value.length >= 3) {
+      const matches = allUsers.filter(u => u.toLowerCase().includes(value.toLowerCase()));
+      setUserSuggestions(matches.slice(0, 5));
+      if (value.includes('@') && matches.length === 0) {
+        setShowNewUserWarning(true);
+      }
+    } else {
+      setUserSuggestions([]);
+    }
+  }, [allUsers]);
+
   async function handleAddToGroup(e: React.FormEvent) {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!selectedGroup || !groupEmail) return;
+
+    if (showNewUserWarning && !confirm(`"${groupEmail}" is not in the system. A new account will be created. Continue?`)) return;
+
     try {
       const creds = await getCredentials();
       const cognito = new CognitoIdentityProviderClient({ region: config.region, credentials: creds });
-      // Try to add existing user; if user doesn't exist, create them
       try {
         await cognito.send(new AdminAddUserToGroupCommand({ UserPoolId: config.userPoolId, Username: groupEmail, GroupName: selectedGroup }));
       } catch (err: unknown) {
@@ -169,7 +222,10 @@ export function Admin({ config }: { config: RuntimeConfig }) {
       }
       setSuccess(`Added ${groupEmail} to ${selectedGroup}`);
       setGroupEmail('');
+      setUserSuggestions([]);
+      setShowNewUserWarning(false);
       loadGroupMembers(selectedGroup);
+      loadAllUsers();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add user to group');
     }
@@ -186,6 +242,11 @@ export function Admin({ config }: { config: RuntimeConfig }) {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to remove user');
     }
+  }
+
+  // --- Multi-select group toggle ---
+  function toggleGroup(g: string) {
+    setSelectedGroups(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
   }
 
   return (
@@ -206,34 +267,88 @@ export function Admin({ config }: { config: RuntimeConfig }) {
 
       {tab === 'agents' && (
         <div className="admin-section">
-          <h2>Register Agent</h2>
-          <form onSubmit={handleRegisterAgent}>
-            <input value={agentArn} onChange={e => setAgentArn(e.target.value)} placeholder="Agent ARN (arn:aws:bedrock-agentcore:...)" required />
-            <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Display Name" required maxLength={100} />
+          <h2>{editingArn ? 'Edit Agent' : 'Register Agent'}</h2>
+          <form onSubmit={handleSaveAgent} className="agent-form">
+            <label>Type</label>
+            <div className="radio-group">
+              <label className={`radio-option ${agentType === 'agent' ? 'selected' : ''}`}>
+                <input type="radio" name="type" value="agent" checked={agentType === 'agent'} onChange={() => setAgentType('agent')} />
+                Agent Runtime
+              </label>
+              <label className={`radio-option ${agentType === 'harness' ? 'selected' : ''}`}>
+                <input type="radio" name="type" value="harness" checked={agentType === 'harness'} onChange={() => setAgentType('harness')} />
+                Harness
+              </label>
+            </div>
+
+            <label>{agentType === 'agent' ? 'Agent Runtime ARN' : 'Harness ARN'}</label>
+            <input
+              value={agentArn}
+              onChange={e => setAgentArn(e.target.value)}
+              placeholder={agentType === 'agent' ? 'arn:aws:bedrock-agentcore:...:runtime/...' : 'arn:aws:bedrock-agentcore:...:harness/...'}
+              required
+              disabled={!!editingArn}
+            />
+
+            <label>Display Name</label>
+            <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="e.g. Customer Support Agent" required maxLength={100} />
+
+            <label>Description</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description of what this agent does..." rows={2} maxLength={500} />
+
+            <label>Availability</label>
             <select value={availMode} onChange={e => setAvailMode(e.target.value as 'all' | 'restricted')}>
               <option value="all">Available to all users</option>
               <option value="restricted">Restricted access</option>
             </select>
+
             {availMode === 'restricted' && (
               <>
-                <input value={allowedUsers} onChange={e => setAllowedUsers(e.target.value)} placeholder="Allowed emails (comma-separated)" />
-                <input value={allowedGroups} onChange={e => setAllowedGroups(e.target.value)} placeholder="Allowed groups (comma-separated)" />
+                <label>Allowed Emails (comma-separated)</label>
+                <input value={allowedUsers} onChange={e => setAllowedUsers(e.target.value)} placeholder="alice@example.com, bob@example.com" />
+
+                <label>Allowed Groups</label>
+                <div className="multi-select">
+                  {groups.length === 0 ? (
+                    <p className="empty-state">No access groups created yet. Create one in the Access Groups tab.</p>
+                  ) : (
+                    groups.map(g => (
+                      <label key={g} className={`checkbox-option ${selectedGroups.includes(g) ? 'selected' : ''}`}>
+                        <input type="checkbox" checked={selectedGroups.includes(g)} onChange={() => toggleGroup(g)} />
+                        {g}
+                      </label>
+                    ))
+                  )}
+                </div>
               </>
             )}
-            <button type="submit" className="btn-primary">Register Agent</button>
+
+            <div className="form-actions">
+              <button type="submit" className="btn-primary">
+                {editingArn ? 'Update Agent' : 'Register Agent'}
+              </button>
+              {editingArn && (
+                <button type="button" onClick={resetAgentForm} className="btn-secondary">Cancel</button>
+              )}
+            </div>
           </form>
 
           <h2>Registered Agents</h2>
           {loading ? <p>Loading...</p> : agents.length === 0 ? <p>No agents registered yet.</p> : (
             <table className="agent-table">
-              <thead><tr><th>Name</th><th>ARN</th><th>Access</th><th></th></tr></thead>
+              <thead><tr><th>Type</th><th>Name</th><th>Description</th><th>ARN</th><th>Access</th><th></th></tr></thead>
               <tbody>
                 {agents.map(a => (
                   <tr key={a.PK}>
+                    <td><span className={`agent-type-badge badge-${a.type || 'agent'}`}>{a.type || 'agent'}</span></td>
                     <td>{a.displayName}</td>
+                    <td className="desc-cell">{a.description || '—'}</td>
                     <td className="arn-cell">{a.PK}</td>
                     <td>{a.availability.mode === 'all' ? 'All users' : 'Restricted'}</td>
-                    <td><button onClick={() => handleDeleteAgent(a.PK)} className="btn-danger">Remove</button></td>
+                    <td className="action-cell">
+                      <button onClick={() => handleEditAgent(a)} className="btn-secondary btn-small">Edit</button>
+                      <button onClick={() => handleDeleteAgent(a.PK)} className="btn-danger btn-small">Remove</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -251,15 +366,34 @@ export function Admin({ config }: { config: RuntimeConfig }) {
           </form>
 
           <h2>Manage Group Members</h2>
-          <select value={selectedGroup} onChange={e => { setSelectedGroup(e.target.value); loadGroupMembers(e.target.value); }}>
+          <select value={selectedGroup} onChange={e => { setSelectedGroup(e.target.value); if (e.target.value) loadGroupMembers(e.target.value); }}>
             <option value="">Select a group...</option>
             {groups.map(g => <option key={g} value={g}>{g}</option>)}
           </select>
 
           {selectedGroup && (
             <>
-              <form onSubmit={handleAddToGroup} className="inline-form">
-                <input value={groupEmail} onChange={e => setGroupEmail(e.target.value)} type="email" placeholder="User email" required />
+              <form onSubmit={handleAddToGroup} className="inline-form autocomplete-container">
+                <div className="autocomplete-wrapper">
+                  <input
+                    value={groupEmail}
+                    onChange={e => handleGroupEmailChange(e.target.value)}
+                    type="email"
+                    placeholder="User email"
+                    required
+                    autoComplete="off"
+                  />
+                  {userSuggestions.length > 0 && (
+                    <ul className="autocomplete-dropdown">
+                      {userSuggestions.map(s => (
+                        <li key={s} onClick={() => { setGroupEmail(s); setUserSuggestions([]); setShowNewUserWarning(false); }}>{s}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {showNewUserWarning && (
+                    <p className="warning-msg">⚠️ This user is not in the system. Adding will create a new account.</p>
+                  )}
+                </div>
                 <button type="submit" className="btn-primary">Add</button>
               </form>
               <ul className="member-list">

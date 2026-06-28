@@ -5,9 +5,11 @@ import { useAuth } from '../auth/AuthContext';
 import { createDynamoClient } from '../aws/clients';
 import { RuntimeConfig } from '../config';
 
-interface Agent {
+export interface Agent {
   PK: string;
   displayName: string;
+  description?: string;
+  type: 'agent' | 'harness';
   availability: {
     mode: 'all' | 'restricted';
     allowedUsers?: string[];
@@ -69,7 +71,11 @@ export function Dashboard({ config }: { config: RuntimeConfig }) {
         <div className="agent-grid">
           {agents.map(agent => (
             <div key={agent.PK} className="agent-card" onClick={() => navigate(`/chat/${encodeURIComponent(agent.PK)}`)}>
+              <div className="agent-card-header">
+                <span className={`agent-type-badge badge-${agent.type || 'agent'}`}>{agent.type || 'agent'}</span>
+              </div>
               <h3>{agent.displayName}</h3>
+              {agent.description && <p className="agent-description">{agent.description}</p>}
               <p className="agent-arn">{agent.PK}</p>
               <button className="btn-primary">Chat</button>
             </div>
