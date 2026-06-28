@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Dev-only (not shipped to GitHub)
+.kiro/
+
+# Env files
+.env
+.env.local
+
+# Logs
+*.log

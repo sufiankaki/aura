@@ -1,0 +1,535 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Aura - AgentCore Frontend Framework. Deploys a complete web frontend for AI agents
+  running on AWS Bedrock AgentCore. Provisions Cognito, DynamoDB, Amplify Hosting, and IAM.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: Prefix for all resource names (3-30 chars, lowercase letters/digits/hyphens, starts with letter)
+    MinLength: 3
+    MaxLength: 30
+    AllowedPattern: '^[a-z][a-z0-9-]*[a-z0-9]$'
+    ConstraintDescription: Must be 3-30 characters, lowercase letters, digits, and hyphens. Must start with a letter and not end with a hyphen.
+
+  AdminEmail:
+    Type: String
+    Description: Email address of the initial administrator
+    AllowedPattern: '^[a-zA-Z0-9._%+\-]{1,64}@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$'
+    ConstraintDescription: Must be a valid email address (max 254 characters)
+    MaxLength: 254
+
+  CustomDomain:
+    Type: String
+    Description: (Optional) Custom domain FQDN to associate with the frontend
+    Default: ''
+    MaxLength: 253
+
+Conditions:
+  HasCustomDomain: !Not [!Equals [!Ref CustomDomain, '']]
+
+Resources:
+  # ──────────────────────────────────────────────
+  # Cognito User Pool
+  # ──────────────────────────────────────────────
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${ProjectName}-user-pool'
+      UsernameAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: false
+      AutoVerifiedAttributes:
+        - email
+      MfaConfiguration: 'OFF'
+      Policies:
+        SignInPolicy:
+          AllowedFirstAuthFactors:
+            - EMAIL_OTP
+      UserPoolTier: ESSENTIALS
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+      LambdaConfig:
+        PostConfirmation: !GetAtt PostConfirmationFunction.Arn
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${ProjectName}-app-client'
+      UserPoolId: !Ref UserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AuthSessionValidity: 10
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders:
+        - COGNITO
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+
+  AdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: admin
+      UserPoolId: !Ref UserPool
+      Description: Administrator group
+      RoleArn: !GetAtt AdminRole.Arn
+      Precedence: 0
+
+  UserGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: user
+      UserPoolId: !Ref UserPool
+      Description: Standard user group
+      RoleArn: !GetAtt UserRole.Arn
+      Precedence: 10
+
+  # ──────────────────────────────────────────────
+  # Cognito Identity Pool
+  # ──────────────────────────────────────────────
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !Sub '${ProjectName}-identity-pool'
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt UserPool.ProviderName
+          ServerSideTokenCheck: true
+
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    DependsOn:
+      - AdminGroup
+      - UserGroup
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      RoleMappings:
+        cognitoProvider:
+          IdentityProvider: !Sub 'cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}:${UserPoolClient}'
+          Type: Token
+          AmbiguousRoleResolution: Deny
+
+  # ──────────────────────────────────────────────
+  # IAM Roles
+  # ──────────────────────────────────────────────
+  UserRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-user-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+        - PolicyName: UserPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:InvokeAgentRuntime
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                  - dynamodb:GetItem
+                Resource: !GetAtt AgentRegistryTable.Arn
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !GetAtt AgentRegistryTable.Arn
+                Condition:
+                  'ForAllValues:StringLike':
+                    'dynamodb:LeadingKeys':
+                      - 'USER#${cognito-identity.amazonaws.com:sub}#*'
+
+  AdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-admin-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+        - PolicyName: AdminPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:InvokeAgentRuntime
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                Resource: !GetAtt AgentRegistryTable.Arn
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminRemoveUserFromGroup
+                  - cognito-idp:AdminListGroupsForUser
+                  - cognito-idp:CreateGroup
+                  - cognito-idp:ListUsers
+                  - cognito-idp:ListGroups
+                  - cognito-idp:ListUsersInGroup
+                Resource: !GetAtt UserPool.Arn
+
+  # ──────────────────────────────────────────────
+  # DynamoDB Agent Registry
+  # ──────────────────────────────────────────────
+  AgentRegistryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-agent-registry'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+
+  # ──────────────────────────────────────────────
+  # Amplify Hosting
+  # ──────────────────────────────────────────────
+  AmplifyApp:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: !Sub '${ProjectName}-frontend'
+      Platform: WEB
+      CustomRules:
+        - Source: '</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>'
+          Target: /index.html
+          Status: '200'
+
+  AmplifyBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: main
+      Stage: PRODUCTION
+      EnableAutoBuild: false
+
+  AmplifyDomainAssociation:
+    Type: AWS::Amplify::Domain
+    Condition: HasCustomDomain
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      DomainName: !Ref CustomDomain
+      SubDomainSettings:
+        - BranchName: main
+          Prefix: ''
+
+  # ──────────────────────────────────────────────
+  # Post-Confirmation Lambda (adds new users to 'user' group)
+  # ──────────────────────────────────────────────
+  PostConfirmationFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-post-confirmation-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CognitoGroupPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminAddUserToGroup
+                Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*'
+
+  PostConfirmationFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-post-confirmation'
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt PostConfirmationFunctionRole.Arn
+      Timeout: 10
+      Code:
+        ZipFile: |
+          import boto3
+          def handler(event, context):
+              if event.get('triggerSource') == 'PostConfirmation_ConfirmSignUp':
+                  client = boto3.client('cognito-idp')
+                  client.admin_add_user_to_group(
+                      UserPoolId=event['userPoolId'],
+                      Username=event['userName'],
+                      GroupName='user'
+                  )
+              return event
+
+  PostConfirmationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt PostConfirmationFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
+
+  # ──────────────────────────────────────────────
+  # Custom Resource Lambda (admin seed + frontend deploy)
+  # ──────────────────────────────────────────────
+  CustomResourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-custom-resource-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CustomResourcePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminAddUserToGroup
+                  - cognito-idp:AdminGetUser
+                Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*'
+              - Effect: Allow
+                Action:
+                  - amplify:CreateDeployment
+                  - amplify:StartDeployment
+                  - amplify:GetJob
+                Resource: !Sub 'arn:aws:amplify:${AWS::Region}:${AWS::AccountId}:apps/${AmplifyApp.AppId}/*'
+
+  CustomResourceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-custom-resource'
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt CustomResourceRole.Arn
+      Timeout: 300
+      MemorySize: 256
+      Code:
+        ZipFile: |
+          import json
+          import time
+          import urllib.request
+          import urllib.error
+          import boto3
+          import zipfile
+          import io
+          import cfnresponse
+
+          cognito = boto3.client('cognito-idp')
+          amplify = boto3.client('amplify')
+
+          def handler(event, context):
+              print(json.dumps(event))
+              try:
+                  if event['RequestType'] == 'Delete':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                      return
+
+                  action = event['ResourceProperties'].get('Action')
+
+                  if action == 'SeedAdminUser':
+                      seed_admin(event, context)
+                  elif action == 'DeployFrontend':
+                      deploy_frontend(event, context)
+                  else:
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': f'Unknown action: {action}'})
+              except Exception as e:
+                  print(f'Error: {e}')
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+
+          def seed_admin(event, context):
+              props = event['ResourceProperties']
+              pool_id = props['UserPoolId']
+              email = props['AdminEmail']
+
+              # Create or get existing user
+              try:
+                  cognito.admin_get_user(UserPoolId=pool_id, Username=email)
+                  print(f'User {email} already exists')
+              except cognito.exceptions.UserNotFoundException:
+                  cognito.admin_create_user(
+                      UserPoolId=pool_id,
+                      Username=email,
+                      UserAttributes=[{'Name': 'email', 'Value': email}, {'Name': 'email_verified', 'Value': 'true'}],
+                      MessageAction='SUPPRESS'
+                  )
+                  print(f'Created user {email}')
+
+              # Add to admin group
+              cognito.admin_add_user_to_group(UserPoolId=pool_id, Username=email, GroupName='admin')
+              # Add to user group (best-effort)
+              try:
+                  cognito.admin_add_user_to_group(UserPoolId=pool_id, Username=email, GroupName='user')
+              except Exception as e:
+                  print(f'Warning: Could not add to user group: {e}')
+
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {'AdminEmail': email})
+
+          def deploy_frontend(event, context):
+              props = event['ResourceProperties']
+              app_id = props['AppId']
+              branch = props['BranchName']
+              release_url = props['ReleaseUrl']
+              config_json = props['ConfigJson']
+
+              # Download frontend zip from GitHub
+              print(f'Downloading frontend from {release_url}')
+              req = urllib.request.Request(release_url, headers={'User-Agent': 'AuraDeployment/1.0'})
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  zip_bytes = resp.read()
+
+              # Inject config.json into the zip
+              zip_buffer = io.BytesIO(zip_bytes)
+              output_buffer = io.BytesIO()
+              with zipfile.ZipFile(zip_buffer, 'r') as zin:
+                  with zipfile.ZipFile(output_buffer, 'w', zipfile.ZIP_DEFLATED) as zout:
+                      for item in zin.namelist():
+                          zout.writestr(item, zin.read(item))
+                      zout.writestr('config.json', config_json)
+              final_zip = output_buffer.getvalue()
+
+              # Create Amplify deployment
+              deployment = amplify.create_deployment(appId=app_id, branchName=branch)
+              upload_url = deployment['zipUploadUrl']
+              job_id = deployment['jobId']
+
+              # Upload zip
+              req = urllib.request.Request(upload_url, data=final_zip, method='PUT')
+              req.add_header('Content-Type', 'application/zip')
+              urllib.request.urlopen(req, timeout=120)
+
+              # Start deployment
+              amplify.start_deployment(appId=app_id, branchName=branch, jobId=job_id)
+
+              # Poll for completion (max 10 min)
+              for _ in range(60):
+                  time.sleep(10)
+                  job = amplify.get_job(appId=app_id, branchName=branch, jobId=job_id)
+                  status = job['job']['summary']['status']
+                  print(f'Deployment status: {status}')
+                  if status == 'SUCCEED':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {'JobId': job_id})
+                      return
+                  elif status in ('FAILED', 'CANCELLED'):
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': f'Deployment {status}'})
+                      return
+
+              cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': 'Deployment timed out'})
+
+  # ──────────────────────────────────────────────
+  # Custom Resource Invocations
+  # ──────────────────────────────────────────────
+  AdminSeedUser:
+    Type: Custom::AdminSeed
+    DependsOn:
+      - AdminGroup
+      - UserGroup
+    Properties:
+      ServiceToken: !GetAtt CustomResourceFunction.Arn
+      Action: SeedAdminUser
+      UserPoolId: !Ref UserPool
+      AdminEmail: !Ref AdminEmail
+
+  FrontendDeployment:
+    Type: Custom::FrontendDeploy
+    DependsOn:
+      - AmplifyBranch
+    Properties:
+      ServiceToken: !GetAtt CustomResourceFunction.Arn
+      Action: DeployFrontend
+      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: main
+      ReleaseUrl: https://github.com/sufiankaki/aura/releases/latest/download/frontend.zip
+      ConfigJson: !Sub |
+        {
+          "userPoolId": "${UserPool}",
+          "appClientId": "${UserPoolClient}",
+          "identityPoolId": "${IdentityPool}",
+          "agentRegistryTable": "${AgentRegistryTable}",
+          "region": "${AWS::Region}"
+        }
+
+Outputs:
+  ApplicationUrl:
+    Description: Public URL of the deployed frontend
+    Value: !If
+      - HasCustomDomain
+      - !Sub 'https://${CustomDomain}'
+      - !Sub 'https://main.${AmplifyApp.DefaultDomain}'
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+
+  AppClientId:
+    Description: Cognito App Client ID
+    Value: !Ref UserPoolClient
+
+  IdentityPoolId:
+    Description: Cognito Identity Pool ID
+    Value: !Ref IdentityPool
+
+  AgentRegistryTableName:
+    Description: DynamoDB Agent Registry table name
+    Value: !Ref AgentRegistryTable
+
+  AmplifyAppId:
+    Description: Amplify Hosting application ID
+    Value: !GetAtt AmplifyApp.AppId
