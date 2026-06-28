@@ -47,6 +47,7 @@ Resources:
         SignInPolicy:
           AllowedFirstAuthFactors:
             - EMAIL_OTP
+            - PASSWORD
       UserPoolTier: ESSENTIALS
       EmailConfiguration:
         EmailSendingAccount: COGNITO_DEFAULT
@@ -123,11 +124,13 @@ Resources:
       - UserGroup
     Properties:
       IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt UserRole.Arn
       RoleMappings:
         cognitoProvider:
           IdentityProvider: !Sub 'cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}:${UserPoolClient}'
           Type: Token
-          AmbiguousRoleResolution: Deny
+          AmbiguousRoleResolution: AuthenticatedRole
 
   # ──────────────────────────────────────────────
   # IAM Roles
