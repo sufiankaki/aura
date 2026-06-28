@@ -57,10 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sub = idToken.payload.sub as string;
       const email = idToken.payload.email as string;
 
-      // Derive sessionId from sessionStorage or create new one
+      // Derive sessionId from sessionStorage or create new one (min 33 chars for AgentCore)
       let sessionId = sessionStorage.getItem('aura_session_id');
       if (!sessionId) {
-        sessionId = crypto.randomUUID();
+        sessionId = `aura-${crypto.randomUUID()}`;
         sessionStorage.setItem('aura_session_id', sessionId);
       }
 
@@ -82,6 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initiateSignIn = useCallback(async (email: string) => {
     setState(prev => ({ ...prev, error: null }));
     try {
+      // Attempt sign-up first (no-op if user exists, creates if new)
+      try {
+        const { signUp } = await import('aws-amplify/auth');
+        await signUp({
+          username: email,
+          password: crypto.randomUUID() + 'Aa1!', // Dummy password (never used, EMAIL_OTP is the auth method)
+          options: { userAttributes: { email } },
+        });
+      } catch (signUpErr: unknown) {
+        // UsernameExistsException is expected for existing users — ignore it
+        const errName = (signUpErr as { name?: string }).name;
+        if (errName !== 'UsernameExistsException') {
+          // Log but don't block — signIn may still work
+          console.log('SignUp skipped:', errName);
+        }
+      }
+
       await signIn({
         username: email,
         options: { authFlowType: 'USER_AUTH', preferredChallenge: 'EMAIL_OTP' },

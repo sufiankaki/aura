@@ -57,32 +57,33 @@ export function Chat({ config }: { config: RuntimeConfig }) {
 
       const response = await client.send(command);
 
-      if (response.response && Symbol.asyncIterator in Object(response.response)) {
-        // Streaming response
-        for await (const chunk of response.response as AsyncIterable<Uint8Array>) {
-          const text = new TextDecoder().decode(chunk);
-          // Parse SSE-style lines
-          for (const line of text.split('\n')) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              setMessages(prev => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                updated[updated.length - 1] = { ...last, content: last.content + data };
-                return updated;
-              });
-            }
+      // Handle response - AgentCore may return JSON string or event-stream
+      if (response.response) {
+        const body = response.response;
+
+        if (Symbol.asyncIterator in Object(body)) {
+          // Streaming: collect all chunks then parse
+          const chunks: Uint8Array[] = [];
+          for await (const chunk of body as AsyncIterable<Uint8Array>) {
+            chunks.push(chunk);
           }
+          const fullText = new TextDecoder().decode(concatUint8Arrays(chunks));
+          const parsed = tryParseAgentResponse(fullText);
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: 'assistant', content: parsed };
+            return updated;
+          });
+        } else {
+          // Non-streaming: single body
+          const text = typeof body === 'string' ? body : new TextDecoder().decode(body as Uint8Array);
+          const parsed = tryParseAgentResponse(text);
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: 'assistant', content: parsed };
+            return updated;
+          });
         }
-      } else if (response.response) {
-        // Non-streaming: single response body
-        const body = response.response as unknown;
-        const text = typeof body === 'string' ? body : new TextDecoder().decode(body as Uint8Array);
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: 'assistant', content: text };
-          return updated;
-        });
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Agent invocation failed');
@@ -134,4 +135,30 @@ export function Chat({ config }: { config: RuntimeConfig }) {
       </form>
     </div>
   );
+}
+
+function tryParseAgentResponse(text: string): string {
+  // AgentCore may return a JSON-encoded string (e.g. "Hello!\n") or plain text
+  try {
+    const parsed = JSON.parse(text);
+    if (typeof parsed === 'string') return parsed;
+    if (typeof parsed === 'object' && parsed.response) return String(parsed.response);
+    if (typeof parsed === 'object' && parsed.output) return String(parsed.output);
+    return text;
+  } catch {
+    // Not JSON — could be SSE or plain text
+    // Try parsing SSE lines
+    const lines = text.split('\n');
+    const dataLines = lines.filter(l => l.startsWith('data: ')).map(l => l.slice(6));
+    if (dataLines.length > 0) return dataLines.join('');
+    return text;
+  }
+}
+
+function concatUint8Arrays(arrays: Uint8Array[]): Uint8Array {
+  const total = arrays.reduce((sum, a) => sum + a.length, 0);
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const a of arrays) { result.set(a, offset); offset += a.length; }
+  return result;
 }
