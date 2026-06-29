@@ -184,4 +184,4 @@ I built this because I wanted my agents to be usable by people who don't have AW
 
 ---
 
-*Built by [Sufian Kaki](https://github.com/sufiankaki). Feedback welcome.*
+*Built by [Sufian Kaki Aslamo](https://github.com/sufiankaki). Feedback welcome.*

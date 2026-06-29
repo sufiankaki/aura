@@ -7,7 +7,7 @@ body {
   width: 1200px;
   height: 675px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #0f1b2d 0%, #1a3a5c 40%, #0d2847 100%);
+  background: linear-gradient(135deg, #232f3e 0%, #1b2838 40%, #161e2d 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -17,125 +17,195 @@ body {
   overflow: hidden;
 }
 
-/* Subtle grid pattern */
 body::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
 }
 
-/* Glow accent */
+.aws-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff9900, #ffb84d, #ff9900);
+}
+
 .glow {
   position: absolute;
-  width: 400px;
-  height: 400px;
+  width: 500px;
+  height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(9,114,211,0.2) 0%, transparent 70%);
-  top: -100px;
-  right: -50px;
-}
-
-.glow2 {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(3,127,12,0.15) 0%, transparent 70%);
-  bottom: -80px;
-  left: -50px;
+  background: radial-gradient(circle, rgba(255,153,0,0.08) 0%, transparent 70%);
+  top: -150px;
+  right: -100px;
 }
 
 .content {
   position: relative;
   z-index: 1;
   text-align: center;
-  max-width: 900px;
+  max-width: 1000px;
 }
 
-.badge {
+.top-label {
   display: inline-block;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 20px;
-  padding: 6px 18px;
-  font-size: 14px;
-  letter-spacing: 1px;
+  background: rgba(255,153,0,0.15);
+  border: 1px solid rgba(255,153,0,0.4);
+  border-radius: 4px;
+  padding: 5px 14px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-bottom: 24px;
-  color: #7eb8f0;
+  margin-bottom: 20px;
+  color: #ff9900;
+  font-weight: 600;
 }
 
 h1 {
-  font-size: 52px;
+  font-size: 46px;
   font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 16px;
-  background: linear-gradient(to right, #ffffff, #a8d4ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+h1 span {
+  color: #ff9900;
 }
 
 .subtitle {
-  font-size: 22px;
-  color: #94b8d4;
-  margin-bottom: 36px;
+  font-size: 20px;
+  color: #a0b4c8;
+  margin-bottom: 40px;
   font-weight: 300;
 }
 
 .services {
   display: flex;
-  gap: 16px;
+  gap: 24px;
   justify-content: center;
-  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .service {
-  background: rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.service-icon {
+  width: 52px;
+  height: 52px;
+  background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
-  color: #c8ddf0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ff9900;
+  padding: 4px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.service-icon.cfn { background: rgba(233,79,119,0.12); border-color: rgba(233,79,119,0.3); color: #e94f77; }
+.service-icon.cognito { background: rgba(221,107,16,0.12); border-color: rgba(221,107,16,0.3); color: #dd6b10; }
+.service-icon.dynamo { background: rgba(59,72,204,0.12); border-color: rgba(59,72,204,0.3); color: #4c6ef5; }
+.service-icon.amplify { background: rgba(255,153,0,0.12); border-color: rgba(255,153,0,0.3); color: #ff9900; }
+.service-icon.agentcore { background: rgba(3,127,12,0.12); border-color: rgba(3,127,12,0.3); color: #2ecc71; }
+
+.service-label {
+  font-size: 10px;
+  color: #6a8fad;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.arrow {
+  font-size: 20px;
+  color: #4a6a84;
+}
+
+.flow-label {
+  font-size: 11px;
+  color: #4a6a84;
+  margin-top: 8px;
 }
 
 .author {
   position: absolute;
-  bottom: 30px;
+  bottom: 28px;
   right: 40px;
-  font-size: 15px;
-  color: #6a9ec4;
+  font-size: 14px;
+  color: #6a8fad;
 }
 
-.logo {
+.project {
   position: absolute;
-  bottom: 30px;
+  bottom: 28px;
   left: 40px;
-  font-size: 14px;
-  color: #4a7ea8;
+  font-size: 13px;
+  color: #4a6a84;
   letter-spacing: 0.5px;
+}
+
+.aws-badge {
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  font-size: 11px;
+  color: #ff9900;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 </style>
 </head>
 <body>
+  <div class="aws-stripe"></div>
   <div class="glow"></div>
-  <div class="glow2"></div>
+  <span class="aws-badge">BUILT ON AWS</span>
   <div class="content">
-    <div class="badge">Open Source Framework</div>
-    <h1>Making Bedrock AgentCore<br>Agents Accessible to Everyone</h1>
-    <p class="subtitle">Deploy a self-service web frontend for your AI agents in minutes</p>
+    <div class="top-label">Open Source • MIT License</div>
+    <h1>Making Bedrock <span>AgentCore</span> Agents<br>Accessible to Everyone</h1>
+    <p class="subtitle">A self-service web frontend for your AI agents — deployed in minutes via CloudFormation</p>
     <div class="services">
-      <div class="service">☁️ CloudFormation</div>
-      <div class="service">🔐 Amazon Cognito</div>
-      <div class="service">📊 DynamoDB</div>
-      <div class="service">🌐 Amplify Hosting</div>
-      <div class="service">🤖 AgentCore</div>
+      <div class="service">
+        <div class="service-icon cfn">CFN</div>
+        <span class="service-label">CloudFormation</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="service">
+        <div class="service-icon cognito">Auth</div>
+        <span class="service-label">Cognito</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="service">
+        <div class="service-icon dynamo">DB</div>
+        <span class="service-label">DynamoDB</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="service">
+        <div class="service-icon amplify">Web</div>
+        <span class="service-label">Amplify</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="service">
+        <div class="service-icon agentcore">AI</div>
+        <span class="service-label">AgentCore</span>
+      </div>
     </div>
   </div>
-  <div class="author">by Sufian Kaki</div>
-  <div class="logo">AURA — AgentCore Frontend Framework</div>
+  <div class="author">by Sufian Kaki Aslamo</div>
+  <div class="project">AURA — AgentCore Frontend Framework</div>
 </body>
 </html>
