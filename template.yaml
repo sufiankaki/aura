@@ -494,7 +494,7 @@ Resources:
       AppId: !GetAtt AmplifyApp.AppId
       BranchName: main
       ReleaseUrl: https://github.com/sufiankaki/aura/releases/latest/download/frontend.zip
-      DeploymentVersion: "3"
+      DeploymentVersion: "4"
       ConfigJson: !Sub |
         {
           "userPoolId": "${UserPool}",
