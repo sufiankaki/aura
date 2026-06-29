@@ -42,12 +42,31 @@ Aura deploys entirely within a single AWS region. Every resource is created fres
 
 ![Architecture Overview](diagrams/architecture-overview.svg)
 
-```
-User → Amplify Hosting (React SPA)
-         ├── Cognito User Pool (Email OTP Auth)
-         ├── Cognito Identity Pool (IAM Credentials)
-         ├── DynamoDB (Agent Registry + Consent)
-         └── AgentCore Runtime (Streaming Chat)
+```mermaid
+graph LR
+    subgraph Users
+        U[End User]
+        A[Admin]
+    end
+
+    subgraph CloudFormation Stack
+        AMP[AWS Amplify<br/>React SPA]
+        CUP[Cognito User Pool<br/>Email OTP]
+        CIP[Cognito Identity Pool<br/>Token → IAM Creds]
+        DDB[DynamoDB<br/>Agent Registry]
+        IAM[IAM Roles<br/>User / Admin]
+        LAM[Lambda<br/>Custom Resources]
+    end
+
+    AC[AgentCore Runtime<br/>Strands Agents & Harnesses]
+
+    U --> AMP
+    A --> AMP
+    AMP --> CUP
+    AMP --> CIP
+    AMP --> DDB
+    CIP --> IAM
+    AMP -.->|SigV4 signed| AC
 ```
 
 **The resource graph:**
@@ -68,6 +87,23 @@ The frontend talks directly to AWS services from the browser — no API Gateway,
 [DIAGRAM: user-journey]
 
 ![User Journey](diagrams/user-journey.svg)
+
+```mermaid
+graph LR
+    subgraph Admin Journey
+        D[Deploy Stack<br/>5-10 min] --> S1[Sign In<br/>email OTP]
+        S1 --> R[Register Agents<br/>paste ARN]
+        R --> G[Manage Access<br/>groups & users]
+        G --> SH[Share URL<br/>with users ✓]
+    end
+
+    subgraph User Journey
+        O[Open URL] --> S2[Sign In<br/>email OTP]
+        S2 --> T[Accept Terms<br/>first time only]
+        T --> DA[Dashboard<br/>see agents]
+        DA --> CH[Chat<br/>streaming ✓]
+    end
+```
 
 **The deploy experience (administrator):**
 
@@ -99,6 +135,26 @@ The frontend talks directly to AWS services from the browser — no API Gateway,
 [DIAGRAM: auth-flow]
 
 ![Authentication Flow](diagrams/auth-flow.svg)
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant C as Cognito User Pool
+    participant IP as Identity Pool
+    participant STS as IAM / STS
+    participant AG as AgentCore
+
+    B->>C: signIn(email, EMAIL_OTP)
+    C-->>B: Challenge: enter OTP
+    Note over C: Sends OTP to email
+    B->>C: confirmSignIn(otp_code)
+    C-->>B: ID Token + Access Token + Refresh Token
+    B->>IP: Exchange ID Token
+    IP->>STS: AssumeRole (based on cognito:preferred_role)
+    STS-->>B: Temporary AWS Credentials (scoped to role)
+    B->>AG: InvokeAgentRuntime (SigV4 signed)
+    AG-->>B: Streaming response
+```
 
 **Why a single CloudFormation template?** I wanted the deployment to be atomic. Either everything works or nothing exists. CloudFormation gives you rollback semantics — if the DynamoDB table creation fails, the Cognito pool gets deleted too. No orphaned resources, no partial states to debug.
 
