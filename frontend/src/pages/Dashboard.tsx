@@ -4,6 +4,7 @@ import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { useAuth } from '../auth/AuthContext';
 import { createDynamoClient } from '../aws/clients';
 import { RuntimeConfig } from '../config';
+import { useVersionCheck, VersionBanner } from '../hooks/useVersionCheck';
 
 export interface Agent {
   PK: string;
@@ -23,6 +24,7 @@ export function Dashboard({ config }: { config: RuntimeConfig }) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const versionInfo = useVersionCheck(isAdmin);
 
   useEffect(() => { loadAgents(); }, []);
 
@@ -62,6 +64,7 @@ export function Dashboard({ config }: { config: RuntimeConfig }) {
       </header>
 
       <main>
+        <VersionBanner info={versionInfo} />
         <h2>Available Agents</h2>
         {loading && <p>Loading agents...</p>}
         {error && <p className="error-msg">{error}</p>}

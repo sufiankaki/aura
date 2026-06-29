@@ -132,3 +132,7 @@ form { display: flex; flex-direction: column; }
 .error-screen h1 { color: var(--danger); }
 .error-detail { font-family: monospace; color: var(--text-muted); margin-top: 0.5rem; }
 .loading { padding: 2rem; text-align: center; }
+
+/* Version Banner */
+.version-banner { background: #fffbea; border: 1px solid #f5c518; border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: #7a5700; }
+.version-banner a { color: var(--primary); font-weight: 500; }
