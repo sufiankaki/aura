@@ -1,0 +1,14 @@
+graph LR
+    subgraph "Admin Journey"
+        D["① Deploy Stack\n5-10 min"] --> S1["② Sign In\nemail OTP"]
+        S1 --> R["③ Register Agents\npaste ARN"]
+        R --> G["④ Manage Access\ngroups & users"]
+        G --> SH["⑤ Share URL\nwith users ✓"]
+    end
+
+    subgraph "User Journey"
+        O["① Open URL"] --> S2["② Sign In\nemail OTP"]
+        S2 --> T["③ Accept Terms\nfirst time only"]
+        T --> DA["④ Dashboard\nsee agents"]
+        DA --> CH["⑤ Chat\nstreaming ✓"]
+    end

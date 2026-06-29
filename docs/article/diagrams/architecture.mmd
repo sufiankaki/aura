@@ -1,0 +1,24 @@
+graph LR
+    subgraph Users
+        U["👤 End User"]
+        A["🛡️ Admin"]
+    end
+
+    subgraph "CloudFormation Stack"
+        AMP["AWS Amplify\nReact SPA"]
+        CUP["Cognito User Pool\nEmail OTP"]
+        CIP["Cognito Identity Pool\nToken → IAM Creds"]
+        DDB["DynamoDB\nAgent Registry"]
+        IAM["IAM Roles\nUser / Admin"]
+        LAM["Lambda\nCustom Resources"]
+    end
+
+    AC["AgentCore Runtime\nStrands Agents & Harnesses"]
+
+    U --> AMP
+    A --> AMP
+    AMP --> CUP
+    CUP --> CIP
+    CIP --> IAM
+    AMP --> DDB
+    AMP -.->|"SigV4 Signed\nStreaming"| AC

@@ -1,10 +1,23 @@
 # Aura: Making Bedrock AgentCore Agents Accessible to Everyone
 
-**Tags:** Amazon Bedrock, AgentCore, Strands SDK, CloudFormation, Cognito, Amplify, DynamoDB, AI Agents, Serverless, Open Source  
-**Level:** 300 (Advanced)  
-**License:** MIT  
-**Repository:** https://github.com/sufiankaki/aura  
-**Services Used:** Amazon Cognito, Amazon DynamoDB, AWS Amplify Hosting, AWS Lambda, AWS IAM, Amazon Bedrock AgentCore
+---
+
+## Builder Center Post Metadata
+
+**Title:** Aura: Making Bedrock AgentCore Agents Accessible to Everyone
+
+**Description (512 chars max):**
+Deploy a self-service web frontend for your AWS Bedrock AgentCore agents in under 10 minutes. Aura is an open-source framework — a single CloudFormation template that provisions Cognito (passwordless auth), DynamoDB (agent registry), and Amplify Hosting (React SPA). No custom frontend development required. Register your Strands agents or harnesses, control access per user or group, and let your users chat with AI agents through a streaming web interface.
+
+**Tags (5):** `Amazon Bedrock`, `AgentCore`, `Serverless`, `CloudFormation`, `AI Agents`
+
+**Cover Image:** `diagrams/cover.png` (1200×675)
+
+**Canonical URL:** `https://github.com/sufiankaki/aura/blob/main/docs/article/builder-center-article.md`
+
+**Series:** AgentCore Diaries
+
+---
 
 ## The Last Mile Problem
 
@@ -40,34 +53,9 @@ Aura deploys entirely within a single AWS region. Every resource is created fres
 
 [DIAGRAM: architecture-overview]
 
-![Architecture Overview](diagrams/architecture-overview.svg)
+![Architecture Overview](diagrams/architecture.png)
 
-```mermaid
-graph LR
-    subgraph Users
-        U[End User]
-        A[Admin]
-    end
-
-    subgraph CloudFormation Stack
-        AMP[AWS Amplify<br/>React SPA]
-        CUP[Cognito User Pool<br/>Email OTP]
-        CIP[Cognito Identity Pool<br/>Token → IAM Creds]
-        DDB[DynamoDB<br/>Agent Registry]
-        IAM[IAM Roles<br/>User / Admin]
-        LAM[Lambda<br/>Custom Resources]
-    end
-
-    AC[AgentCore Runtime<br/>Strands Agents & Harnesses]
-
-    U --> AMP
-    A --> AMP
-    AMP --> CUP
-    AMP --> CIP
-    AMP --> DDB
-    CIP --> IAM
-    AMP -.->|SigV4 signed| AC
-```
+![Architecture Overview](diagrams/architecture.png)
 
 **The resource graph:**
 
@@ -86,7 +74,7 @@ The frontend talks directly to AWS services from the browser — no API Gateway,
 
 [DIAGRAM: user-journey]
 
-![User Journey](diagrams/user-journey.svg)
+![User Journey](diagrams/user-journey.png)
 
 ```mermaid
 graph LR
@@ -134,27 +122,9 @@ graph LR
 
 [DIAGRAM: auth-flow]
 
-![Authentication Flow](diagrams/auth-flow.svg)
+![Authentication Flow](diagrams/auth-flow.png)
 
-```mermaid
-sequenceDiagram
-    participant B as Browser
-    participant C as Cognito User Pool
-    participant IP as Identity Pool
-    participant STS as IAM / STS
-    participant AG as AgentCore
-
-    B->>C: signIn(email, EMAIL_OTP)
-    C-->>B: Challenge: enter OTP
-    Note over C: Sends OTP to email
-    B->>C: confirmSignIn(otp_code)
-    C-->>B: ID Token + Access Token + Refresh Token
-    B->>IP: Exchange ID Token
-    IP->>STS: AssumeRole (based on cognito:preferred_role)
-    STS-->>B: Temporary AWS Credentials (scoped to role)
-    B->>AG: InvokeAgentRuntime (SigV4 signed)
-    AG-->>B: Streaming response
-```
+![Authentication Flow](diagrams/auth-flow.png)
 
 **Why a single CloudFormation template?** I wanted the deployment to be atomic. Either everything works or nothing exists. CloudFormation gives you rollback semantics — if the DynamoDB table creation fails, the Cognito pool gets deleted too. No orphaned resources, no partial states to debug.
 

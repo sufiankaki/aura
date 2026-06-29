@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant B as Browser
+    participant C as Cognito User Pool
+    participant IP as Identity Pool
+    participant STS as IAM / STS
+    participant AG as AgentCore
+
+    B->>C: signIn(email, EMAIL_OTP)
+    C-->>B: Challenge: enter OTP
+    Note over C: Sends OTP to email
+    B->>C: confirmSignIn(otp_code)
+    C-->>B: ID Token + Access Token + Refresh Token
+    B->>IP: Exchange ID Token
+    IP->>STS: AssumeRole (cognito:preferred_role)
+    STS-->>B: Temporary AWS Credentials
+    B->>AG: InvokeAgentRuntime (SigV4 signed)
+    AG-->>B: Streaming response
