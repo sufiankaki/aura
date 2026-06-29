@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <!-- Background -->
+  <rect width="900" height="520" fill="#f8f9fa" rx="8"/>
+  
+  <!-- Title -->
+  <text x="450" y="35" text-anchor="middle" font-size="18" font-weight="bold" fill="#16191f">Aura — Architecture Overview</text>
+  
+  <!-- User -->
+  <g transform="translate(60,80)">
+    <circle cx="30" cy="20" r="16" fill="#0972d3" opacity="0.15" stroke="#0972d3" stroke-width="1.5"/>
+    <text x="30" y="24" text-anchor="middle" font-size="18">👤</text>
+    <text x="30" y="52" text-anchor="middle" font-size="11" fill="#16191f" font-weight="500">End User</text>
+  </g>
+  
+  <!-- Admin -->
+  <g transform="translate(60,180)">
+    <circle cx="30" cy="20" r="16" fill="#d13212" opacity="0.15" stroke="#d13212" stroke-width="1.5"/>
+    <text x="30" y="24" text-anchor="middle" font-size="18">🛡️</text>
+    <text x="30" y="52" text-anchor="middle" font-size="11" fill="#16191f" font-weight="500">Admin</text>
+  </g>
+  
+  <!-- Amplify Hosting Box -->
+  <g transform="translate(180,70)">
+    <rect width="160" height="80" fill="#ffffff" stroke="#0972d3" stroke-width="2" rx="6"/>
+    <rect width="160" height="24" fill="#0972d3" rx="6" ry="6"/>
+    <rect x="0" y="12" width="160" height="12" fill="#0972d3"/>
+    <text x="80" y="16" text-anchor="middle" font-size="10" fill="white" font-weight="600">AWS Amplify</text>
+    <text x="80" y="48" text-anchor="middle" font-size="11" fill="#16191f">React SPA</text>
+    <text x="80" y="64" text-anchor="middle" font-size="9" fill="#5f6b7a">Frontend Bundle</text>
+  </g>
+  
+  <!-- CloudFormation Box (wrapping everything) -->
+  <rect x="370" y="55" width="500" height="430" fill="none" stroke="#879596" stroke-width="1.5" stroke-dasharray="6,3" rx="8"/>
+  <text x="620" y="75" text-anchor="middle" font-size="10" fill="#879596" font-weight="500">CloudFormation Stack</text>
+
+  <!-- Cognito User Pool -->
+  <g transform="translate(400,90)">
+    <rect width="180" height="70" fill="#ffffff" stroke="#dd6b10" stroke-width="1.5" rx="6"/>
+    <rect width="180" height="22" fill="#dd6b10" rx="6" ry="6"/>
+    <rect x="0" y="11" width="180" height="11" fill="#dd6b10"/>
+    <text x="90" y="15" text-anchor="middle" font-size="9" fill="white" font-weight="600">Amazon Cognito</text>
+    <text x="90" y="42" text-anchor="middle" font-size="10" fill="#16191f" font-weight="500">User Pool</text>
+    <text x="90" y="57" text-anchor="middle" font-size="9" fill="#5f6b7a">Email OTP • Groups • Roles</text>
+  </g>
+  
+  <!-- Identity Pool -->
+  <g transform="translate(400,180)">
+    <rect width="180" height="70" fill="#ffffff" stroke="#dd6b10" stroke-width="1.5" rx="6"/>
+    <rect width="180" height="22" fill="#dd6b10" rx="6" ry="6"/>
+    <rect x="0" y="11" width="180" height="11" fill="#dd6b10"/>
+    <text x="90" y="15" text-anchor="middle" font-size="9" fill="white" font-weight="600">Amazon Cognito</text>
+    <text x="90" y="42" text-anchor="middle" font-size="10" fill="#16191f" font-weight="500">Identity Pool</text>
+    <text x="90" y="57" text-anchor="middle" font-size="9" fill="#5f6b7a">Token → IAM Credentials</text>
+  </g>
+  
+  <!-- DynamoDB -->
+  <g transform="translate(400,275)">
+    <rect width="180" height="70" fill="#ffffff" stroke="#3b48cc" stroke-width="1.5" rx="6"/>
+    <rect width="180" height="22" fill="#3b48cc" rx="6" ry="6"/>
+    <rect x="0" y="11" width="180" height="11" fill="#3b48cc"/>
+    <text x="90" y="15" text-anchor="middle" font-size="9" fill="white" font-weight="600">Amazon DynamoDB</text>
+    <text x="90" y="42" text-anchor="middle" font-size="10" fill="#16191f" font-weight="500">Agent Registry</text>
+    <text x="90" y="57" text-anchor="middle" font-size="9" fill="#5f6b7a">Agents • Access Rules • Consent</text>
+  </g>
+  
+  <!-- AgentCore -->
+  <g transform="translate(640,180)">
+    <rect width="200" height="80" fill="#ffffff" stroke="#037f0c" stroke-width="1.5" rx="6"/>
+    <rect width="200" height="22" fill="#037f0c" rx="6" ry="6"/>
+    <rect x="0" y="11" width="200" height="11" fill="#037f0c"/>
+    <text x="100" y="15" text-anchor="middle" font-size="9" fill="white" font-weight="600">Amazon Bedrock AgentCore</text>
+    <text x="100" y="42" text-anchor="middle" font-size="10" fill="#16191f" font-weight="500">Agent Runtime</text>
+    <text x="100" y="57" text-anchor="middle" font-size="9" fill="#5f6b7a">Strands Agents • Harnesses</text>
+    <text x="100" y="70" text-anchor="middle" font-size="9" fill="#5f6b7a">Streaming Responses</text>
+  </g>
+  
+  <!-- IAM Roles -->
+  <g transform="translate(640,290)">
+    <rect width="200" height="60" fill="#ffffff" stroke="#d13212" stroke-width="1.5" rx="6"/>
+    <rect width="200" height="22" fill="#d13212" rx="6" ry="6"/>
+    <rect x="0" y="11" width="200" height="11" fill="#d13212"/>
+    <text x="100" y="15" text-anchor="middle" font-size="9" fill="white" font-weight="600">AWS IAM</text>
+    <text x="100" y="42" text-anchor="middle" font-size="10" fill="#16191f" font-weight="500">User Role • Admin Role</text>
+  </g>
+  
+  <!-- Lambda -->
+  <g transform="translate(640,375)">
+    <rect width="200" height="60" fill="#ffffff" stroke="#dd6b10" stroke-width="1.5" rx="6"/>
+    <rect width="200" height="22" fill="#dd6b10" rx="6" ry="6"/>
+    <rect x="0" y="11" width="200" height="11" fill="#dd6b10"/>
+    <text x="100" y="15" text-anchor="middle" font-size="9" fill="white" font-weight="600">AWS Lambda</text>
+    <text x="100" y="42" text-anchor="middle" font-size="10" fill="#16191f" font-weight="500">Custom Resources</text>
+    <text x="100" y="55" text-anchor="middle" font-size="9" fill="#5f6b7a">Admin Seed • Frontend Deploy</text>
+  </g>
+  
+  <!-- Arrows: User to Amplify -->
+  <line x1="106" y1="100" x2="178" y2="100" stroke="#0972d3" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <!-- Admin to Amplify -->
+  <line x1="106" y1="200" x2="178" y2="140" stroke="#d13212" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  
+  <!-- Amplify to Cognito -->
+  <line x1="340" y1="105" x2="398" y2="120" stroke="#dd6b10" stroke-width="1.2" marker-end="url(#arrow-orange)"/>
+  <!-- Amplify to Identity Pool -->
+  <line x1="340" y1="125" x2="398" y2="210" stroke="#dd6b10" stroke-width="1.2" marker-end="url(#arrow-orange)"/>
+  <!-- Amplify to DynamoDB -->
+  <line x1="340" y1="140" x2="398" y2="300" stroke="#3b48cc" stroke-width="1.2" marker-end="url(#arrow-purple)"/>
+  
+  <!-- Identity Pool to IAM -->
+  <line x1="580" y1="225" x2="638" y2="310" stroke="#d13212" stroke-width="1.2" marker-end="url(#arrow-red)"/>
+  
+  <!-- Browser to AgentCore (direct) -->
+  <path d="M340,115 Q380,115 380,160 Q380,210 420,210" fill="none" stroke="#037f0c" stroke-width="0" />
+  <line x1="340" y1="110" x2="638" y2="210" stroke="#037f0c" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arrow-green)"/>
+  
+  <!-- Legend -->
+  <g transform="translate(400,450)">
+    <text x="0" y="0" font-size="9" fill="#5f6b7a" font-weight="500">Data Flow:</text>
+    <line x1="60" y1="-3" x2="90" y2="-3" stroke="#0972d3" stroke-width="1.5"/>
+    <text x="95" y="0" font-size="9" fill="#5f6b7a">Auth</text>
+    <line x1="130" y1="-3" x2="160" y2="-3" stroke="#3b48cc" stroke-width="1.5"/>
+    <text x="165" y="0" font-size="9" fill="#5f6b7a">Data</text>
+    <line x1="195" y1="-3" x2="225" y2="-3" stroke="#037f0c" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="230" y="0" font-size="9" fill="#5f6b7a">Streaming (Direct)</text>
+  </g>
+  
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#0972d3"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#d13212"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#dd6b10"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#3b48cc"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#037f0c"/>
+    </marker>
+  </defs>
+</svg>

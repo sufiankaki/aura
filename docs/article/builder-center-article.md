@@ -6,8 +6,6 @@
 **Repository:** https://github.com/sufiankaki/aura  
 **Services Used:** Amazon Cognito, Amazon DynamoDB, AWS Amplify Hosting, AWS Lambda, AWS IAM, Amazon Bedrock AgentCore
 
----
-
 ## The Last Mile Problem
 
 I've been building AI agents on AWS Bedrock AgentCore for a while now. The Strands SDK makes it remarkably easy to go from an idea to a deployed agent — define your tools, pick a model, write a system prompt, and you have a working agent. AgentCore gives you a runtime: scalable, managed, always-on.
@@ -42,6 +40,8 @@ Aura deploys entirely within a single AWS region. Every resource is created fres
 
 [DIAGRAM: architecture-overview]
 
+![Architecture Overview](diagrams/architecture-overview.svg)
+
 ```
 User → Amplify Hosting (React SPA)
          ├── Cognito User Pool (Email OTP Auth)
@@ -66,6 +66,8 @@ The frontend talks directly to AWS services from the browser — no API Gateway,
 ## How It Works
 
 [DIAGRAM: user-journey]
+
+![User Journey](diagrams/user-journey.svg)
 
 **The deploy experience (administrator):**
 
@@ -95,6 +97,8 @@ The frontend talks directly to AWS services from the browser — no API Gateway,
 **Why direct SDK calls from the browser?** The traditional pattern is: browser → API Gateway → Lambda → downstream service. That's three hops for every chat message. AgentCore supports IAM authentication directly. With Cognito Identity Pool issuing temporary credentials, the browser can invoke `InvokeAgentRuntime` with no intermediary. Fewer moving parts, lower latency, lower cost.
 
 [DIAGRAM: auth-flow]
+
+![Authentication Flow](diagrams/auth-flow.svg)
 
 **Why a single CloudFormation template?** I wanted the deployment to be atomic. Either everything works or nothing exists. CloudFormation gives you rollback semantics — if the DynamoDB table creation fails, the Cognito pool gets deleted too. No orphaned resources, no partial states to debug.
 

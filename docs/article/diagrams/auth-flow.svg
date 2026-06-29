@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <!-- Background -->
+  <rect width="800" height="480" fill="#f8f9fa" rx="8"/>
+  
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#16191f">Authentication &amp; Authorization Flow</text>
+
+  <!-- Swim lanes -->
+  <line x1="0" y1="55" x2="800" y2="55" stroke="#d5dbdb" stroke-width="1"/>
+  
+  <!-- Lane headers -->
+  <rect x="10" y="60" width="90" height="24" fill="#0972d3" rx="4"/>
+  <text x="55" y="76" text-anchor="middle" font-size="9" fill="white" font-weight="600">Browser</text>
+  
+  <rect x="150" y="60" width="90" height="24" fill="#dd6b10" rx="4"/>
+  <text x="195" y="76" text-anchor="middle" font-size="9" fill="white" font-weight="600">Cognito</text>
+  
+  <rect x="320" y="60" width="90" height="24" fill="#dd6b10" rx="4"/>
+  <text x="365" y="76" text-anchor="middle" font-size="9" fill="white" font-weight="600">Identity Pool</text>
+  
+  <rect x="490" y="60" width="90" height="24" fill="#d13212" rx="4"/>
+  <text x="535" y="76" text-anchor="middle" font-size="9" fill="white" font-weight="600">IAM / STS</text>
+  
+  <rect x="660" y="60" width="110" height="24" fill="#037f0c" rx="4"/>
+  <text x="715" y="76" text-anchor="middle" font-size="9" fill="white" font-weight="600">AgentCore</text>
+
+  <!-- Vertical lane lines -->
+  <line x1="55" y1="90" x2="55" y2="460" stroke="#d5dbdb" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="195" y1="90" x2="195" y2="460" stroke="#d5dbdb" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="365" y1="90" x2="365" y2="460" stroke="#d5dbdb" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="535" y1="90" x2="535" y2="460" stroke="#d5dbdb" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <line x1="715" y1="90" x2="715" y2="460" stroke="#d5dbdb" stroke-width="0.5" stroke-dasharray="3,3"/>
+
+  <!-- Step 1: Enter email -->
+  <g transform="translate(0,100)">
+    <rect x="15" y="0" width="80" height="28" fill="#e3f2fd" stroke="#0972d3" stroke-width="1" rx="4"/>
+    <text x="55" y="18" text-anchor="middle" font-size="8" fill="#16191f">Enter email</text>
+    <line x1="95" y1="14" x2="155" y2="14" stroke="#0972d3" stroke-width="1.2" marker-end="url(#arr)"/>
+    <text x="125" y="8" text-anchor="middle" font-size="7" fill="#5f6b7a">signIn()</text>
+  </g>
+
+  <!-- Step 2: Send OTP -->
+  <g transform="translate(0,145)">
+    <rect x="155" y="0" width="80" height="28" fill="#fef3e0" stroke="#dd6b10" stroke-width="1" rx="4"/>
+    <text x="195" y="12" text-anchor="middle" font-size="8" fill="#16191f">Send OTP</text>
+    <text x="195" y="23" text-anchor="middle" font-size="7" fill="#5f6b7a">to email</text>
+    <line x1="155" y1="14" x2="95" y2="14" stroke="#dd6b10" stroke-width="1.2" marker-end="url(#arr-o)"/>
+    <text x="125" y="8" text-anchor="middle" font-size="7" fill="#5f6b7a">challenge</text>
+  </g>
+
+  <!-- Step 3: Enter OTP -->
+  <g transform="translate(0,195)">
+    <rect x="15" y="0" width="80" height="28" fill="#e3f2fd" stroke="#0972d3" stroke-width="1" rx="4"/>
+    <text x="55" y="18" text-anchor="middle" font-size="8" fill="#16191f">Enter OTP</text>
+    <line x1="95" y1="14" x2="155" y2="14" stroke="#0972d3" stroke-width="1.2" marker-end="url(#arr)"/>
+    <text x="125" y="8" text-anchor="middle" font-size="7" fill="#5f6b7a">confirmSignIn()</text>
+  </g>
+
+  <!-- Step 4: Issue tokens -->
+  <g transform="translate(0,240)">
+    <rect x="155" y="0" width="80" height="35" fill="#fef3e0" stroke="#dd6b10" stroke-width="1" rx="4"/>
+    <text x="195" y="12" text-anchor="middle" font-size="8" fill="#16191f">Issue Tokens</text>
+    <text x="195" y="23" text-anchor="middle" font-size="7" fill="#5f6b7a">ID + Access +</text>
+    <text x="195" y="32" text-anchor="middle" font-size="7" fill="#5f6b7a">Refresh</text>
+    <line x1="155" y1="17" x2="95" y2="17" stroke="#dd6b10" stroke-width="1.2" marker-end="url(#arr-o)"/>
+    <text x="125" y="10" text-anchor="middle" font-size="7" fill="#5f6b7a">JWT tokens</text>
+  </g>
+
+  <!-- Step 5: Exchange token -->
+  <g transform="translate(0,295)">
+    <rect x="15" y="0" width="80" height="28" fill="#e3f2fd" stroke="#0972d3" stroke-width="1" rx="4"/>
+    <text x="55" y="12" text-anchor="middle" font-size="8" fill="#16191f">Exchange</text>
+    <text x="55" y="23" text-anchor="middle" font-size="7" fill="#5f6b7a">ID Token</text>
+    <line x1="95" y1="14" x2="325" y2="14" stroke="#0972d3" stroke-width="1.2" marker-end="url(#arr)"/>
+    <text x="210" y="8" text-anchor="middle" font-size="7" fill="#5f6b7a">getCredentialsForIdentity()</text>
+  </g>
+
+  <!-- Step 6: Role mapping -->
+  <g transform="translate(0,340)">
+    <rect x="325" y="0" width="80" height="35" fill="#fef3e0" stroke="#dd6b10" stroke-width="1" rx="4"/>
+    <text x="365" y="12" text-anchor="middle" font-size="8" fill="#16191f">Role Mapping</text>
+    <text x="365" y="23" text-anchor="middle" font-size="7" fill="#5f6b7a">preferred_role</text>
+    <text x="365" y="32" text-anchor="middle" font-size="7" fill="#5f6b7a">→ IAM Role</text>
+    <line x1="405" y1="17" x2="495" y2="17" stroke="#d13212" stroke-width="1.2" marker-end="url(#arr-r)"/>
+    <text x="450" y="10" text-anchor="middle" font-size="7" fill="#5f6b7a">assumeRole</text>
+  </g>
+
+  <!-- Step 7: Temp credentials -->
+  <g transform="translate(0,390)">
+    <rect x="495" y="0" width="80" height="28" fill="#fce4ec" stroke="#d13212" stroke-width="1" rx="4"/>
+    <text x="535" y="12" text-anchor="middle" font-size="8" fill="#16191f">Temp Creds</text>
+    <text x="535" y="23" text-anchor="middle" font-size="7" fill="#5f6b7a">AccessKey+Secret</text>
+    <line x1="495" y1="14" x2="95" y2="14" stroke="#d13212" stroke-width="1.2" marker-end="url(#arr-r)"/>
+    <text x="295" y="8" text-anchor="middle" font-size="7" fill="#5f6b7a">scoped IAM credentials</text>
+  </g>
+
+  <!-- Step 8: Invoke Agent -->
+  <g transform="translate(0,435)">
+    <rect x="15" y="0" width="80" height="28" fill="#e8f5e9" stroke="#037f0c" stroke-width="1" rx="4"/>
+    <text x="55" y="12" text-anchor="middle" font-size="8" fill="#16191f">Invoke Agent</text>
+    <text x="55" y="23" text-anchor="middle" font-size="7" fill="#5f6b7a">SigV4 signed</text>
+    <line x1="95" y1="14" x2="665" y2="14" stroke="#037f0c" stroke-width="1.5" marker-end="url(#arr-g)" stroke-dasharray="4,2"/>
+    <text x="380" y="8" text-anchor="middle" font-size="7" fill="#037f0c" font-weight="500">InvokeAgentRuntime (streaming)</text>
+  </g>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#0972d3"/>
+    </marker>
+    <marker id="arr-o" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#dd6b10"/>
+    </marker>
+    <marker id="arr-r" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#d13212"/>
+    </marker>
+    <marker id="arr-g" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#037f0c"/>
+    </marker>
+  </defs>
+</svg>

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 320" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <!-- Background -->
+  <rect width="860" height="320" fill="#f8f9fa" rx="8"/>
+  
+  <!-- Title -->
+  <text x="430" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#16191f">User Journey — From Deploy to Chat</text>
+
+  <!-- Admin Journey (top row) -->
+  <text x="30" y="72" font-size="10" fill="#d13212" font-weight="600">ADMIN</text>
+  
+  <!-- Step 1: Deploy -->
+  <g transform="translate(100,55)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#d13212" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">① Deploy Stack</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">CloudFormation</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">3 parameters</text>
+  </g>
+  <line x1="220" y1="80" x2="245" y2="80" stroke="#d13212" stroke-width="1.2" marker-end="url(#a-r)"/>
+
+  <!-- Step 2: Sign in -->
+  <g transform="translate(250,55)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#d13212" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">② Sign In</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">Email OTP</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">(admin seeded)</text>
+  </g>
+  <line x1="370" y1="80" x2="395" y2="80" stroke="#d13212" stroke-width="1.2" marker-end="url(#a-r)"/>
+
+  <!-- Step 3: Register Agents -->
+  <g transform="translate(400,55)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#d13212" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">③ Register Agents</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">Paste ARN</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">Set access rules</text>
+  </g>
+  <line x1="520" y1="80" x2="545" y2="80" stroke="#d13212" stroke-width="1.2" marker-end="url(#a-r)"/>
+
+  <!-- Step 4: Manage Groups -->
+  <g transform="translate(550,55)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#d13212" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">④ Manage Access</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">Create groups</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">Add members</text>
+  </g>
+  <line x1="670" y1="80" x2="695" y2="80" stroke="#d13212" stroke-width="1.2" marker-end="url(#a-r)"/>
+
+  <!-- Step 5: Share URL -->
+  <g transform="translate(700,55)">
+    <rect width="120" height="50" fill="#d13212" stroke="#d13212" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="white" font-weight="500">⑤ Share URL</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#ffcdd2">with users</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#ffcdd2">✓ Done</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="30" y1="130" x2="830" y2="130" stroke="#d5dbdb" stroke-width="1"/>
+
+  <!-- User Journey (bottom row) -->
+  <text x="30" y="172" font-size="10" fill="#0972d3" font-weight="600">USER</text>
+
+  <!-- Step 1: Open URL -->
+  <g transform="translate(100,155)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#0972d3" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">① Open URL</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">Welcome page</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">Platform info</text>
+  </g>
+  <line x1="220" y1="180" x2="245" y2="180" stroke="#0972d3" stroke-width="1.2" marker-end="url(#a-b)"/>
+
+  <!-- Step 2: Sign in -->
+  <g transform="translate(250,155)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#0972d3" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">② Sign In</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">Enter email</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">Enter OTP code</text>
+  </g>
+  <line x1="370" y1="180" x2="395" y2="180" stroke="#0972d3" stroke-width="1.2" marker-end="url(#a-b)"/>
+
+  <!-- Step 3: Accept Terms -->
+  <g transform="translate(400,155)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#0972d3" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">③ Accept Terms</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">First time only</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">Data residency</text>
+  </g>
+  <line x1="520" y1="180" x2="545" y2="180" stroke="#0972d3" stroke-width="1.2" marker-end="url(#a-b)"/>
+
+  <!-- Step 4: Dashboard -->
+  <g transform="translate(550,155)">
+    <rect width="120" height="50" fill="#ffffff" stroke="#0972d3" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="#16191f" font-weight="500">④ Dashboard</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#5f6b7a">See available</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#5f6b7a">agents</text>
+  </g>
+  <line x1="670" y1="180" x2="695" y2="180" stroke="#0972d3" stroke-width="1.2" marker-end="url(#a-b)"/>
+
+  <!-- Step 5: Chat -->
+  <g transform="translate(700,155)">
+    <rect width="120" height="50" fill="#0972d3" stroke="#0972d3" stroke-width="1.5" rx="6"/>
+    <text x="60" y="20" text-anchor="middle" font-size="9" fill="white" font-weight="500">⑤ Chat</text>
+    <text x="60" y="33" text-anchor="middle" font-size="8" fill="#bbdefb">Streaming</text>
+    <text x="60" y="44" text-anchor="middle" font-size="8" fill="#bbdefb">responses</text>
+  </g>
+
+  <!-- Time indicator -->
+  <g transform="translate(100,240)">
+    <line x1="0" y1="0" x2="720" y2="0" stroke="#879596" stroke-width="1" marker-end="url(#a-grey)"/>
+    <text x="0" y="16" font-size="8" fill="#879596">Deploy (5-10 min)</text>
+    <text x="200" y="16" font-size="8" fill="#879596">First use (30 sec)</text>
+    <text x="580" y="16" font-size="8" fill="#879596">Every visit (instant)</text>
+  </g>
+
+  <!-- Footer note -->
+  <text x="430" y="290" text-anchor="middle" font-size="9" fill="#5f6b7a">Admin deploys once • Users access immediately • No frontend development required</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="a-r" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#d13212"/>
+    </marker>
+    <marker id="a-b" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#0972d3"/>
+    </marker>
+    <marker id="a-grey" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5" fill="#879596"/>
+    </marker>
+  </defs>
+</svg>
